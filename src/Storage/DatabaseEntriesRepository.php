@@ -193,7 +193,7 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
                 return collect($tags)->map(function ($tag) use ($uuid) {
                     return [
                         'entry_uuid' => $uuid,
-                        'tag' => $tag,
+                        'tag' => utf8_encode($tag),
                     ];
                 });
             })->all());
