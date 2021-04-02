@@ -142,13 +142,24 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
 
         $entries->chunk($this->chunkSize)->each(function ($chunked) use ($table) {
             $table->insert($chunked->map(function ($entry) {
-                $entry->content = utf8_encode(json_encode($entry->content));
-
+                $entry->content = json_encode($this->parseArray($entry->content));
                 return $entry->toArray();
             })->toArray());
         });
 
         $this->storeTags($entries->pluck('tags', 'uuid'));
+    }
+
+
+    public function parseArray($array) {
+        if(!is_array($array)) {
+            return utf8_encode($array);
+        } else {
+            foreach($array as $key => $value) {
+                $array[$key] = $this->parseArray($value);
+            }
+            return ($array);
+        }
     }
 
     /**
@@ -170,9 +181,9 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
 
                 return array_merge($exception->toArray(), [
                     'family_hash' => $exception->familyHash(),
-                    'content' => utf8_encode(json_encode(array_merge(
+                    'content' => (json_encode($this->parseArray(array_merge(
                         $exception->content, ['occurrences' => $occurrences + 1]
-                    ))),
+                    )))),
                 ]);
             })->toArray());
         });
@@ -193,7 +204,7 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
                 return collect($tags)->map(function ($tag) use ($uuid) {
                     return [
                         'entry_uuid' => $uuid,
-                        'tag' => utf8_encode($tag),
+                        'tag' => $this->parseArray($tag),
                     ];
                 });
             })->all());
@@ -225,7 +236,7 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
             $this->table('telescope_entries')
                             ->where('uuid', $update->uuid)
                             ->where('type', $update->type)
-                            ->update(['content' => utf8_encode($content)]);
+                            ->update(['content' => $this->parseArray($content)]);
 
             $this->updateTags($update);
         }
@@ -244,7 +255,7 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
                 collect($entry->tagsChanges['added'])->map(function ($tag) use ($entry) {
                     return [
                         'entry_uuid' => $entry->uuid,
-                        'tag' => utf8_encode($tag),
+                        'tag' => $this->parseArray($tag),
                     ];
                 })->toArray()
             );
@@ -253,7 +264,7 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
         collect($entry->tagsChanges['removed'])->each(function ($tag) use ($entry) {
             $this->table('telescope_entries_tags')->where([
                 'entry_uuid' => $entry->uuid,
-                'tag' => utf8_encode($tag),
+                'tag' => $this->parseArray($tag),
             ])->delete();
         });
     }
@@ -314,7 +325,7 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
         $this->table('telescope_monitoring')
                     ->insert(collect($tags)
                     ->mapWithKeys(function ($tag) {
-                        return ['tag' => utf8_encode($tag)];
+                        return ['tag' => $this->parseArray($tag)];
                     })->all());
     }
 
