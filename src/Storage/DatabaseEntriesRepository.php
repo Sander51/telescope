@@ -153,6 +153,11 @@ class DatabaseEntriesRepository implements Contract, ClearableRepository, Prunab
 
     public function parseArray($array) {
         if(!is_array($array)) {
+            try {
+                if(strlen($array) == 16) {
+                    $array = join("-", unpack("H8time_low/H4time_mid/H4time_hi/H4clock_seq_hi/H12clock_seq_low", $array));
+                }
+            } catch (\Exception $e) { }
             return utf8_encode($array);
         } else {
             foreach($array as $key => $value) {
