@@ -14,6 +14,9 @@ class FormatModel
      */
     public static function given($model)
     {
-        return get_class($model).':'.implode('_', Arr::wrap($model->getKey()));
+        $key = method_exists($model, 'getReadableKey')
+                            ? $model->getReadableKey()
+                            : $model->getKey();
+        return get_class($model).':'.implode('_', Arr::wrap($key));
     }
 }
