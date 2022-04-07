@@ -100,6 +100,11 @@ class QueryWatcher extends Watcher
             if ($binding === null) {
                 $binding = 'null';
             } elseif (! is_int($binding) && ! is_float($binding)) {
+                try {
+                    if(strlen($binding) == 16) {
+                        $binding = join("-", unpack("H8time_low/H4time_mid/H4time_hi/H4clock_seq_hi/H12clock_seq_low", $binding));
+                    }
+                } catch (\Exception $e) { }
                 $binding = $this->quoteStringBinding($event, $binding);
             }
 
