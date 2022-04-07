@@ -149,7 +149,13 @@ class IncomingEntry
             ],
         ]);
 
-        $this->tags(['Auth:'.$user->getAuthIdentifier()]);
+        $var = $user->getAuthIdentifier();
+        try {
+            if(strlen($var) == 16) {
+                $var = join("-", unpack("H8time_low/H4time_mid/H4time_hi/H4clock_seq_hi/H12clock_seq_low", $var));
+            }
+        } catch (\Exception $e) { }
+        $this->tags(['Auth:'.$var]);
 
         return $this;
     }
