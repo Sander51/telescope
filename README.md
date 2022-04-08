@@ -1,3 +1,5 @@
+## This fork has been edited to support the usage of binary uuids in a laravel project
+
 <p align="center"><img src="/art/logo.svg" alt="Logo Laravel Telescope"></p>
 
 <p align="center">
